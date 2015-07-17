@@ -25,8 +25,8 @@ namespace gipl_pvt {
 
 class GiplInput: public ImageInput {
   public:
-    GiplInput () { /* */ }
-    virtual ~GiplInput () { close(); }
+    GiplInput () { init (); }
+    virtual ~GiplInput () { close (); }
     virtual const char *format_name (void) const { return "gipl"; }
     virtual bool valid_file (const std::string &filename) const;
     virtual bool open (const std::string &name, ImageSpec &spec);
@@ -35,12 +35,13 @@ class GiplInput: public ImageInput {
   private:
     FILE *m_fd;
     std::string m_filename;
+    void init ();
 };
 
 class GiplOutput: public ImageOutput {
   public:
-    GiplOutput () : m_fd(NULL) { }
-    virtual ~GiplOutput () { close(); }
+    GiplOutput () { init (); }
+    virtual ~GiplOutput () { close (); }
     virtual const char *format_name (void) const { return "gipl"; }
     virtual int supports (string_view feature) const;
     virtual bool open (const std::string &name, const ImageSpec &spec,
@@ -54,6 +55,7 @@ class GiplOutput: public ImageOutput {
   private:
     FILE *m_fd;
     std::string m_filename;
+    void init ();
 };
 
 OIIO_PLUGIN_NAMESPACE_END

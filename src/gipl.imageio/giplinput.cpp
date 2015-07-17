@@ -30,4 +30,10 @@ OIIO_EXPORT const char *gipl_input_extensions[] = {
 
 OIIO_PLUGIN_EXPORTS_END
 
+void
+GiplInput::init () {
+  m_fd = NULL;
+  m_filename.clear();
+}
+
 OIIO_PLUGIN_NAMESPACE_END
