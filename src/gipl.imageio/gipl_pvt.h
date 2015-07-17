@@ -99,7 +99,9 @@ class GiplInput: public ImageInput {
   private:
     FILE *m_fd;
     std::string m_filename;
+    gipl_pvt::GiplHeader m_header;
     void init ();
+    bool read_header();
 };
 
 class GiplOutput: public ImageOutput {
