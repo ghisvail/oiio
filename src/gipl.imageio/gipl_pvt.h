@@ -14,7 +14,10 @@
 #ifndef OPENIMAGEIO_GIPL_H
 #define OPENIMAGEIO_GIPL_H
 
+#include <cstdio>
 #include "OpenImageIO/imageio.h"
+#include "OpenImageIO/filesystem.h"
+#include "OpenImageIO/fmath.h"
 
 OIIO_PLUGIN_NAMESPACE_BEGIN
 
