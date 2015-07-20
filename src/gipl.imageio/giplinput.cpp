@@ -12,7 +12,6 @@
  * */
 
 #include "gipl_pvt.h"
-#include "OpenImageIO/filesystem.h"
 
 OIIO_PLUGIN_NAMESPACE_BEGIN
 
@@ -174,6 +173,54 @@ void
 GiplInput::init () {
   m_fd = NULL;
   m_filename.clear();
+}
+
+bool
+GiplInput::read_header() {
+  if( !fread(&m_header.dim, sizeof(m_header.dim), 1) ||
+      !fread(&m_header.image_type, sizeof(m_header.image_type), 1) ||
+      !fread(&m_header.pixdim, sizeof(m_header.pixdim), 1) ||
+      !fread(&m_header.line1, sizeof(m_header.line1), 1) ||
+      !fread(&m_header.matrix, sizeof(m_header.matrix), 1) ||
+      !fread(&m_header.flag1, sizeof(m_header.flag1), 1) ||
+      !fread(&m_header.flag2, sizeof(m_header.flag2), 1) ||
+      !fread(&m_header.min, sizeof(m_header.min), 1) ||
+      !fread(&m_header.max, sizeof(m_header.max), 1) ||
+      !fread(&m_header.origin, sizeof(m_header.origin), 1) ||
+      !fread(&m_header.pixval_offset, sizeof(m_header.pixval_offset), 1) ||
+      !fread(&m_header.pixval_cal, sizeof(m_header.pixval_cal), 1) ||
+      !fread(&m_header.user_def1, sizeof(m_header.user_def1), 1) ||
+      !fread(&m_header.user_def2, sizeof(m_header.user_def2), 1) ||
+      !fread(&m_header.magic_number, sizeof(m_header.magic_number), 1) )
+  {
+    error ("Could not read header of file \"%s\"", name.c_str());
+    return false;
+  }
+
+  // ensure line1 attribute is a well-formed c-string 
+  m_header.line1[79] = '\0';
+
+  // GIPL format is written as big-endian
+  if(littleendian())
+  {
+    swap_endian(&m_header.dim, 4);
+    swap_endian(&m_header.image_type);
+    swap_endian(&m_header.pixdim, 4);
+    swap_endian(&m_header.line1, 80);
+    swap_endian(&m_header.matrix, 20);
+    swap_endian(&m_header.flag1);
+    swap_endian(&m_header.flag2);
+    swap_endian(&m_header.min);
+    swap_endian(&m_header.max);
+    swap_endian(&m_header.origin, 4);
+    swap_endian(&m_header.pixval_offset);
+    swap_endian(&m_header.pixval_cal);
+    swap_endian(&m_header.user_def1);
+    swap_endian(&m_header.user_def2);
+    swap_endian(&m_header.magic_number);
+  }
+
+  return true;
 }
 
 OIIO_PLUGIN_NAMESPACE_END
