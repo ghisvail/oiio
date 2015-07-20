@@ -177,7 +177,8 @@ bool
 GiplInput::read_native_scanline(int y, int z, void *data)
 {
   std::vector<unsigned char> scanline_data(m_spec.scanline_bytes());
-  long scanline_offset = (m_spec.height - y) * m_spec.scanline_bytes();
+  long scanline_offset = (m_spec.depth - z) * m_spec.tile_bytes() +
+                         (m_spec.height - y) * m_spec.scanline_bytes();
 
   // position file pointer to beginning of scanline
   fseek(m_fd, scanline_offset, SEEK_CUR);
@@ -237,7 +238,8 @@ GiplInput::init () {
 }
 
 bool
-GiplInput::read_header() {
+GiplInput::read_header()
+{
   if( !fread(&m_header.dim)           ||
       !fread(&m_header.image_type)    ||
       !fread(&m_header.pixdim)        ||
