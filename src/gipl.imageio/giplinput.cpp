@@ -191,35 +191,35 @@ GiplInput::read_native_scanline(int y, int z, void *data)
   {
     if(m_spec.format == TypeDesc::UINT8)
       swap_endian((uint8_t*)&scanline_data[0],
-        scanline_data.size()/sizeof(uint8_t));
+          scanline_data.size() / sizeof(uint8_t));
 
     else if(m_spec.format == TypeDesc::INT8)
       swap_endian((int8_t*)&scanline_data[0],
-        scanline_data.size()/sizeof(int8_t));
+          scanline_data.size() / sizeof(int8_t));
 
     else if(m_spec.format == TypeDesc::UINT16)
       swap_endian((uint16_t*)&scanline_data[0],
-        scanline_data.size()/sizeof(uint16_t));
+          scanline_data.size() / sizeof(uint16_t));
 
     else if(m_spec.format == TypeDesc::INT16)
       swap_endian((int16_t*)&scanline_data[0],
-        scanline_data.size()/sizeof(int16_t));
+          scanline_data.size() / sizeof(int16_t));
 
     else if(m_spec.format == TypeDesc::UINT)
       swap_endian((uint32_t*)&scanline_data[0],
-        scanline_data.size()/sizeof(uint32_t));
+          scanline_data.size() / sizeof(uint32_t));
 
     else if(m_spec.format == TypeDesc::INT)
       swap_endian((int32_t*)&scanline_data[0],
-        scanline_data.size()/sizeof(uint32_t));
+          scanline_data.size() / sizeof(uint32_t));
 
     else if(m_spec.format == TypeDesc::FLOAT)
       swap_endian((float*)&scanline_data[0],
-        scanline_data.size()/sizeof(float));
+          scanline_data.size() / sizeof(float));
 
     else if(m_spec.format == TypeDesc::DOUBLE)
       swap_endian((double*)&scanline_data[0],
-        scanline_data.size()/sizeof(double));
+          scanline_data.size() / sizeof(double));
   }
 
   // copy scanline content to output buffer
