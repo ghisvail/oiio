@@ -106,16 +106,16 @@ class GiplInput: public ImageInput {
     void init ();
     bool read_header();
 
-    // helper function for safe file reading
+    // helper function for safer file reading
     template <class T>
-    bool fread(const T *buffer, std::size_t size=sizeof(T),
+    bool fread(T *buffer, std::size_t size=sizeof(T),
                std::size_t count=1)
     {
-      size_t nread = std::fwrite(buffer, size, count, m_fd);
-      if(nread != count)
+      size_t nitems = std::fread((void *)buffer, size, count, m_fd);
+      if(nitems != count)
         error("Error reading file \"%s\" (wrote %d of %d records)",
-            m_filename, (int)nread , (int)count);
-      return nread == count;
+            m_filename, (int)nitems , (int)count);
+      return nitems == count;
     }
 };
 
@@ -137,6 +137,18 @@ class GiplOutput: public ImageOutput {
     FILE *m_fd;
     std::string m_filename;
     void init ();
+
+    // helper function for safer file reading
+    template <class T>
+    bool fwrite(const T *buffer, std::size_t size=sizeof(T),
+                std::size_t count=1)
+    {
+      size_t nitems = std::fwrite((const void *)buffer, size, count, m_fd);
+      if(nitems != count)
+        error("Error reading file \"%s\" (wrote %d of %d records)",
+            m_filename, (int)nitems , (int)count);
+      return nitems == count;
+    }
 };
 
 OIIO_PLUGIN_NAMESPACE_END
