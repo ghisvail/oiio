@@ -105,6 +105,18 @@ class GiplInput: public ImageInput {
     gipl_pvt::GiplHeader m_header;
     void init ();
     bool read_header();
+
+    // helper function for safe file reading
+    template <class T>
+    bool fread(const T *buffer, std::size_t size=sizeof(T),
+               std::size_t count=1)
+    {
+      size_t nread = std::fwrite(buffer, size, count, m_fd);
+      if(nread != count)
+        error("Error reading file \"%s\" (wrote %d of %d records)",
+            m_filename, (int)nread , (int)count);
+      return nread == count;
+    }
 };
 
 class GiplOutput: public ImageOutput {
