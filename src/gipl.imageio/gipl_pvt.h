@@ -111,7 +111,7 @@ class GiplInput: public ImageInput {
     bool fread(T *buffer, std::size_t size=sizeof(T),
                std::size_t count=1)
     {
-      size_t nitems = std::fread((void *)buffer, size, count, m_fd);
+      std::size_t nitems = std::fread((void *)buffer, size, count, m_fd);
       if(nitems != count)
         error("Error reading file \"%s\" (wrote %d of %d records)",
             m_filename, (int)nitems , (int)count);
@@ -143,7 +143,7 @@ class GiplOutput: public ImageOutput {
     bool fwrite(const T *buffer, std::size_t size=sizeof(T),
                 std::size_t count=1)
     {
-      size_t nitems = std::fwrite((const void *)buffer, size, count, m_fd);
+      std::size_t nitems = std::fwrite((const void *)buffer, size, count, m_fd);
       if(nitems != count)
         error("Error reading file \"%s\" (wrote %d of %d records)",
             m_filename, (int)nitems , (int)count);
