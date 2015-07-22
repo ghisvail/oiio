@@ -11,24 +11,63 @@
  * ====================================================================
  * */
 
+#include <cstdio>
+
+#include "OpenImageIO/filesystem.h"
+#include "OpenImageIO/fmath.h"
+#include "OpenImageIO/imageio.h"
+
 #include "gipl_pvt.h"
+using namespace OIIO_NAMESPACE::gipl_pvt;
+
 
 OIIO_PLUGIN_NAMESPACE_BEGIN
+
+class GiplInput: public ImageInput {
+  public:
+    GiplInput () { init (); }
+    virtual ~GiplInput () { close (); }
+    virtual const char *format_name (void) const { return "gipl"; }
+    virtual bool valid_file (const std::string &filename) const;
+    virtual bool open (const std::string &name, ImageSpec &spec);
+    virtual bool close (void);
+    virtual bool read_native_scanline (int y, int z, void *data);
+  private:
+    std::string m_filename;
+    FILE *m_fd;
+    GiplHeader m_header;
+    void init ();
+    bool read_header();
+
+    // helper function for safer file reading
+    template <class T>
+    bool fread(T *buffer, std::size_t size=sizeof(T),
+               std::size_t count=1)
+    {
+      std::size_t nitems = std::fread((void *)buffer, size, count, m_fd);
+      if(nitems != count)
+        error("Error while reading to file \"%s\" (wrote %d of %d records)",
+            m_filename, (int)nitems , (int)count);
+      return nitems == count;
+    }
+};
+
 
 // Obligatory material to make this a recognizeable imageio plugin:
 OIIO_PLUGIN_EXPORTS_BEGIN
 
 OIIO_EXPORT int gipl_imageio_version = OIIO_PLUGIN_VERSION;
 
-OIIO_EXPORT ImageInput *gipl_input_imageio_create () {
+OIIO_EXPORT ImageInput *
+gipl_input_imageio_create()
+{
   return new GiplInput;
 }
 
-OIIO_EXPORT const char *gipl_input_extensions[] = {
-  "gipl", NULL
-};
+OIIO_EXPORT const char * gipl_input_extensions[] = { "gipl", NULL };
 
 OIIO_PLUGIN_EXPORTS_END
+
 
 bool
 GiplInput::valid_file (const std::string &filename) const
@@ -37,8 +76,8 @@ GiplInput::valid_file (const std::string &filename) const
   if (! fd) return false;
   uint32_t magic;
   bool ok = (std::fread (&magic, sizeof (magic), 1, fd) == 1) &&
-      ((magic == gipl_pvt::GIPL_MAGIC_NUMBER1) ||
-       (magic == gipl_pvt::GIPL_MAGIC_NUMBER2) );
+      ((magic == GIPL_MAGIC_NUMBER1) ||
+       (magic == GIPL_MAGIC_NUMBER2) );
   fclose (fd);
   return ok;
 }
@@ -58,8 +97,8 @@ GiplInput::open (const std::string &name, ImageSpec &spec)
   if (!read_header()) // will also take care of potential read errors
     return false;
 
-  if ((m_header.magic_number == gipl_pvt::GIPL_MAGIC_NUMBER1) ||
-      (m_header.magic_number == gipl_pvt::GIPL_MAGIC_NUMBER2))
+  if ((m_header.magic_number == GIPL_MAGIC_NUMBER1) ||
+      (m_header.magic_number == GIPL_MAGIC_NUMBER2))
   {
     error("\"%s\" is not a %s file, magic number doesn't match",
         m_filename.c_str(), format_name());
@@ -77,53 +116,53 @@ GiplInput::open (const std::string &name, ImageSpec &spec)
 
   switch(m_header.image_type)
   {
-    case gipl_pvt::IT_CHAR:
+    case IT_CHAR:
       m_spec.set_format(TypeDesc::INT8);
       break;
-    case gipl_pvt::IT_U_CHAR:
+    case IT_U_CHAR:
       m_spec.set_format(TypeDesc::UINT8);
       break;
-    case gipl_pvt::IT_SHORT:
+    case IT_SHORT:
       m_spec.set_format(TypeDesc::INT16);
       break;
-    case gipl_pvt::IT_U_SHORT:
+    case IT_U_SHORT:
       m_spec.set_format(TypeDesc::UINT16);
       break;
-    case gipl_pvt::IT_U_INT:
+    case IT_U_INT:
       m_spec.set_format(TypeDesc::UINT);
       break;
-    case gipl_pvt::IT_INT:
+    case IT_INT:
       m_spec.set_format(TypeDesc::INT);
       break;
-    case gipl_pvt::IT_FLOAT:
+    case IT_FLOAT:
       m_spec.set_format(TypeDesc::FLOAT);
       break;
-    case gipl_pvt::IT_DOUBLE:
+    case IT_DOUBLE:
       m_spec.set_format(TypeDesc::DOUBLE);
       break;
 /*
-    case gipl_pvt::IT_VECTOR_3D_CHAR:
+    case IT_VECTOR_3D_CHAR:
       m_spec.set_format(TypeDesc(TypeDesc::INT8, TypeDesc::VEC3));
       break;
-    case gipl_pvt::IT_VECTOR_3D_SHORT:
+    case IT_VECTOR_3D_SHORT:
       m_spec.set_format(TypeDesc(TypeDesc::INT16, TypeDesc::VEC3));
       break;
-    case gipl_pvt::IT_VECTOR_3D_FLOAT:
+    case IT_VECTOR_3D_FLOAT:
       m_spec.set_format(TypeDesc(TypeDesc::FLOAT, TypeDesc::VEC3));
       break;
-    case gipl_pvt::IT_VECTOR_3D_DOUBLE:
+    case IT_VECTOR_3D_DOUBLE:
       m_spec.set_format(TypeDesc(TypeDesc::DOUBLE, TypeDesc::VEC3));
       break;
-    case gipl_pvt::IT_C_SHORT:
+    case IT_C_SHORT:
       m_spec.set_format(TypeDesc(TypeDesc::INT16, TypeDesc::VEC2));
       break;
-    case gipl_pvt::IT_C_INT:
+    case IT_C_INT:
       m_spec.set_format(TypeDesc(TypeDesc::INT, TypeDesc::VEC2));
       break;
-    case gipl_pvt::IT_C_FLOAT:
+    case IT_C_FLOAT:
       m_spec.set_format(TypeDesc(TypeDesc::FLOAT, TypeDesc::VEC2));
       break;
-    case gipl_pvt::IT_C_DOUBLE:
+    case IT_C_DOUBLE:
       m_spec.set_format(TypeDesc(TypeDesc::DOUBLE, TypeDesc::VEC2));
       break;
 */
@@ -135,34 +174,34 @@ GiplInput::open (const std::string &name, ImageSpec &spec)
 
   switch(m_header.flag1)
   {
-    case gipl_pvt::UNDEFINED:
+    case UNDEFINED:
       m_spec.attribute("gipl:orientation", "undefined");
       break;
-    case gipl_pvt::UNDEFINED_PROJECTION:
+    case UNDEFINED_PROJECTION:
       m_spec.attribute("gipl:orientation", "undefined_projection");
       break;
-    case gipl_pvt::AP_PROJECTION:
+    case AP_PROJECTION:
       m_spec.attribute("gipl:orientation", "ap_projection");
       break;
-    case gipl_pvt::LATERAL_PROJECTION:
+    case LATERAL_PROJECTION:
       m_spec.attribute("gipl:orientation", "lateral_projection");
       break;
-    case gipl_pvt::OBLIQUE_PROJECTION:
+    case OBLIQUE_PROJECTION:
       m_spec.attribute("gipl:orientation", "oblique_projection");
       break;
-    case gipl_pvt::UNDEFINED_TOMO:
+    case UNDEFINED_TOMO:
       m_spec.attribute("gipl:orientation", "undefined_tomo");
       break;
-    case gipl_pvt::AXIAL:
+    case AXIAL:
       m_spec.attribute("gipl:orientation", "axial");
       break;
-    case gipl_pvt::CORONAL:
+    case CORONAL:
       m_spec.attribute("gipl:orientation", "coronal");
       break;
-    case gipl_pvt::SAGITTAL:
+    case SAGITTAL:
       m_spec.attribute("gipl:orientation", "sagittal");
       break;
-    case gipl_pvt::OBLIQUE_TOMO:
+    case OBLIQUE_TOMO:
       m_spec.attribute("gipl:orientation", "oblique_tomo");
       break;
   }
@@ -177,8 +216,8 @@ bool
 GiplInput::read_native_scanline(int y, int z, void *data)
 {
   std::vector<unsigned char> scanline_data(m_spec.scanline_bytes());
-  long scanline_offset = (m_spec.depth - z) * m_spec.tile_bytes() +
-                         (m_spec.height - y) * m_spec.scanline_bytes();
+  long scanline_offset = ((z + 1) * m_spec.height - y) *
+                         m_spec.scanline_bytes();
 
   // position file pointer to beginning of scanline
   fseek(m_fd, scanline_offset, SEEK_CUR);
@@ -226,15 +265,16 @@ GiplInput::read_native_scanline(int y, int z, void *data)
   memcpy(data, &scanline_data[0], scanline_data.size());
   
   // reset file pointer to beginning of data
-  fseek(m_fd, gipl_pvt::GIPL_HEADER_SIZE, SEEK_SET);
+  fseek(m_fd, GIPL_HEADER_SIZE, SEEK_SET);
   
   return true;
 }
 
 void
 GiplInput::init () {
-  m_fd = NULL;
   m_filename.clear();
+  m_fd = NULL;
+  //memset((void *)&m_header, 0, sizeof(m_header));
 }
 
 bool

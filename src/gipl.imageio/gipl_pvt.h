@@ -14,12 +14,11 @@
 #ifndef OPENIMAGEIO_GIPL_H
 #define OPENIMAGEIO_GIPL_H
 
-#include <cstdio>
 #include "OpenImageIO/imageio.h"
-#include "OpenImageIO/filesystem.h"
-#include "OpenImageIO/fmath.h"
 
-OIIO_PLUGIN_NAMESPACE_BEGIN
+
+OIIO_NAMESPACE_ENTER
+{
 
 namespace gipl_pvt {
 
@@ -90,67 +89,7 @@ struct GiplHeader         /* Offset | Size | Description                    */
 
 }; // namespace gipl_pvt
 
-class GiplInput: public ImageInput {
-  public:
-    GiplInput () { init (); }
-    virtual ~GiplInput () { close (); }
-    virtual const char *format_name (void) const { return "gipl"; }
-    virtual bool valid_file (const std::string &filename) const;
-    virtual bool open (const std::string &name, ImageSpec &spec);
-    virtual bool close (void);
-    virtual bool read_native_scanline (int y, int z, void *data);
-  private:
-    FILE *m_fd;
-    std::string m_filename;
-    gipl_pvt::GiplHeader m_header;
-    void init ();
-    bool read_header();
-
-    // helper function for safer file reading
-    template <class T>
-    bool fread(T *buffer, std::size_t size=sizeof(T),
-               std::size_t count=1)
-    {
-      std::size_t nitems = std::fread((void *)buffer, size, count, m_fd);
-      if(nitems != count)
-        error("Error while reading to file \"%s\" (wrote %d of %d records)",
-            m_filename, (int)nitems , (int)count);
-      return nitems == count;
-    }
-};
-
-class GiplOutput: public ImageOutput {
-  public:
-    GiplOutput () { init (); }
-    virtual ~GiplOutput () { close (); }
-    virtual const char *format_name (void) const { return "gipl"; }
-    virtual int supports (string_view feature) const;
-    virtual bool open (const std::string &name, const ImageSpec &spec,
-                       OpenMode mode=Create);
-    virtual bool close (void);
-    virtual bool write_scanline (int y, int z, TypeDesc format,
-                                 const void *data, stride_t xstride);
-    virtual bool write_tile (int x, int y, int z, TypeDesc format,
-                             const void *data, stride_t xstride,
-                             stride_t ystride, stride_t zstride);
-  private:
-    FILE *m_fd;
-    std::string m_filename;
-    void init ();
-
-    // helper function for safer file reading
-    template <class T>
-    bool fwrite(const T *buffer, std::size_t size=sizeof(T),
-                std::size_t count=1)
-    {
-      std::size_t nitems = std::fwrite((const void *)buffer, size, count, m_fd);
-      if(nitems != count)
-        error("Error while writing to file \"%s\" (wrote %d of %d records)",
-            m_filename, (int)nitems , (int)count);
-      return nitems == count;
-    }
-};
-
-OIIO_PLUGIN_NAMESPACE_END
+}
+OIIO_NAMESPACE_EXIT
 
 #endif // OPENIMAGEIO_GIPL_H
